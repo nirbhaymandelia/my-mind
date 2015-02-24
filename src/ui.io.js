@@ -7,7 +7,7 @@ MM.UI.IO = function() {
 	this._backend = this._node.querySelector("#backend");
 	this._currentBackend = null;
 	this._backends = {};
-	var ids = ["local", "firebase", "gdrive", "file"];
+	var ids = ["local", "firebase", "gdrive", "file", "webdav", "image"];
 	ids.forEach(function(id) {
 		var ui = MM.UI.Backend.getById(id);
 		ui.init(this._backend);
@@ -28,6 +28,12 @@ MM.UI.IO.prototype.restore = function() {
 		var keyvalue = item.split("=");
 		parts[decodeURIComponent(keyvalue[0])] = decodeURIComponent(keyvalue[1]);
 	});
+	
+	/* backwards compatibility */
+	if ("map" in parts) { parts.url = parts.map; }
+
+	/* just URL means webdav backend */
+	if ("url" in parts && !("b" in parts)) { parts.b = "webdav"; }
 
 	var backend = MM.UI.Backend.getById(parts.b);
 	if (backend) { /* saved backend info */
@@ -49,19 +55,6 @@ MM.UI.IO.prototype.restore = function() {
 			}
 			return;
 		} catch (e) { }
-	}
-
-	if (parts.map) { /* opened with a URL link */
-		var xhr = new XMLHttpRequest();
-		xhr.open("get", parts.map, true);
-		Promise.send(xhr).then(
-			function(xhr) {
-				var json = MM.Format.JSON.from(xhr.responseText);
-				var map = MM.Map.fromJSON(json);
-				MM.App.setMap(map);
-			}
-		);
-		return;
 	}
 }
 
@@ -89,8 +82,9 @@ MM.UI.IO.prototype.show = function(mode) {
 }
 
 MM.UI.IO.prototype.hide = function() {
+	if (!this._node.classList.contains("visible")) { return; }
 	this._node.classList.remove("visible");
-	document.activeElement.blur();
+	MM.Clipboard.focus();
 	window.removeEventListener("keydown", this);
 }
 
@@ -116,13 +110,16 @@ MM.UI.IO.prototype.handleEvent = function(e) {
 
 MM.UI.IO.prototype._syncBackend = function() {
 	var all = this._node.querySelectorAll("div[id]");
-	[].concat.apply([], all).forEach(function(node) { node.style.display = "none"; });
+	[].slice.apply(all).forEach(function(node) { node.style.display = "none"; });
 	
 	this._node.querySelector("#" + this._backend.value).style.display = "";
 	
 	this._backends[this._backend.value].show(this._mode);
 }
 
+/**
+ * @param {MM.UI.Backend} backend
+ */
 MM.UI.IO.prototype._setCurrentBackend = function(backend) {
 	if (this._currentBackend && this._currentBackend != backend) { this._currentBackend.reset(); }
 	
@@ -138,7 +135,6 @@ MM.UI.IO.prototype._updateURL = function() {
 	if (!data) {
 		history.replaceState(null, "", ".");
 	} else {
-		data.b = this._currentBackend.id;
 		var arr = Object.keys(data).map(function(key) {
 			return encodeURIComponent(key)+"="+encodeURIComponent(data[key]);
 		});

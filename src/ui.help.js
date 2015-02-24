@@ -47,6 +47,7 @@ MM.UI.Help.prototype._build = function() {
 	this._buildRow(t, "SelectParent");
 	this._buildRow(t, "Center");
 	this._buildRow(t, "ZoomIn", "ZoomOut");
+	this._buildRow(t, "Fold");
 
 	var t = this._node.querySelector(".manipulation");
 	this._buildRow(t, "InsertSibling");
@@ -61,7 +62,7 @@ MM.UI.Help.prototype._build = function() {
 
 	var t = this._node.querySelector(".editing");
 	this._buildRow(t, "Value");
-	this._buildRow(t, "Yes", "No", "Maybe");
+	this._buildRow(t, "Yes", "No", "Computed");
 	this._buildRow(t, "Edit");
 	this._buildRow(t, "Newline");
 	this._buildRow(t, "Bold");

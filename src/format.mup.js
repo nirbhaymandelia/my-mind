@@ -1,8 +1,7 @@
 MM.Format.Mup = Object.create(MM.Format, {
 	id: {value: "mup"},
 	label: {value: "MindMup"},
-	extension: {value: "mup"},
-	mime: {value: "application/json"}
+	extension: {value: "mup"}
 });
 
 MM.Format.Mup.to = function(data) {
@@ -24,13 +23,17 @@ MM.Format.Mup.from = function(data) {
 
 MM.Format.Mup._MupToMM = function(item) {
 	var json = {
-		text: item.title,
+		text: MM.Format.nl2br(item.title),
 		id: item.id,
 		shape: "box"
 	}
 
 	if (item.attr && item.attr.style && item.attr.style.background) {
 		json.color = item.attr.style.background;
+	}
+
+	if (item.attr && item.attr.collapsed) {
+		json.collapsed = 1;
 	}
 
 	if (item.ideas) {
@@ -58,10 +61,14 @@ MM.Format.Mup._MupToMM = function(item) {
 MM.Format.Mup._MMtoMup = function(item, side) {
 	var result = {
 		id: item.id,
-		title: item.text
+		title: MM.Format.br2nl(item.text),
+		attr: {}
 	}
 	if (item.color) {
-		result.attr = {style:{background:item.color}};
+		result.attr.style = {background:item.color};
+	}
+	if (item.collapsed) {
+		result.attr.collapsed = true;
 	}
 
 	if (item.children) {

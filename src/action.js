@@ -2,6 +2,21 @@ MM.Action = function() {}
 MM.Action.prototype.perform = function() {}
 MM.Action.prototype.undo = function() {}
 
+MM.Action.Multi = function(actions) {
+	this._actions = actions;
+}
+MM.Action.Multi.prototype = Object.create(MM.Action.prototype);
+MM.Action.Multi.prototype.perform = function() {
+	this._actions.forEach(function(action) {
+		action.perform();
+	});
+}
+MM.Action.Multi.prototype.undo = function() {
+	this._actions.slice().reverse().forEach(function(action) {
+		action.undo();
+	});
+}
+
 MM.Action.InsertNewItem = function(parent, index) {
 	this._parent = parent;
 	this._index = index;
@@ -9,6 +24,7 @@ MM.Action.InsertNewItem = function(parent, index) {
 }
 MM.Action.InsertNewItem.prototype = Object.create(MM.Action.prototype);
 MM.Action.InsertNewItem.prototype.perform = function() {
+	this._parent.expand(); /* FIXME remember? */
 	this._item = this._parent.insertChild(this._item, this._index);
 	MM.App.select(this._item);
 }

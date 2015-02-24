@@ -1,18 +1,26 @@
 MM.Format = Object.create(MM.Repo, {
 	extension: {value:""},
-	mime: {value:"text/plain"}
+	mime: {value:""}
 });
 
 MM.Format.getByName = function(name) {
 	var index = name.lastIndexOf(".");
-	var result = MM.Format.JSON;
-	if (index > -1) { 
-		var extension = name.substring(index+1).toLowerCase(); 
-		var format = this.getByProperty("extension", extension);
-		if (format) { result = format; }
-	}
-	return result;
+	if (index == -1) { return null; }
+	var extension = name.substring(index+1).toLowerCase(); 
+	return this.getByProperty("extension", extension);
+}
+
+MM.Format.getByMime = function(mime) {
+	return this.getByProperty("mime", mime);
 }
 
 MM.Format.to = function(data) {}
 MM.Format.from = function(data) {}
+
+MM.Format.nl2br = function(str) {
+	return str.replace(/\n/g, "<br/>");
+}
+
+MM.Format.br2nl = function(str) {
+	return str.replace(/<br\s*\/?>/g, "\n");
+}

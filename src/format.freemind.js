@@ -2,7 +2,7 @@ MM.Format.FreeMind = Object.create(MM.Format, {
 	id: {value: "freemind"},
 	label: {value: "FreeMind"},
 	extension: {value: "mm"},
-	mime: {value: "application/xml"}
+	mime: {value: "application/x-freemind"}
 });
 
 MM.Format.FreeMind.to = function(data) { 
@@ -46,11 +46,12 @@ MM.Format.FreeMind._serializeItem = function(doc, json) {
 
 MM.Format.FreeMind._serializeAttributes = function(doc, json) {
 	var elm = doc.createElement("node");
-	elm.setAttribute("TEXT", json.text);
+	elm.setAttribute("TEXT", MM.Format.br2nl(json.text));
 	elm.setAttribute("ID", json.id);
 
 	if (json.side) { elm.setAttribute("POSITION", json.side); }
 	if (json.shape == "box") { elm.setAttribute("STYLE", "bubble"); }
+	if (json.collapsed) { elm.setAttribute("FOLDED", "true"); }
 
 	return elm;
 }
@@ -71,7 +72,7 @@ MM.Format.FreeMind._parseNode = function(node, parent) {
 MM.Format.FreeMind._parseAttributes = function(node, parent) {
 	var json = {
 		children: [],
-		text: node.getAttribute("TEXT") || "",
+		text: MM.Format.nl2br(node.getAttribute("TEXT") || ""),
 		id: node.getAttribute("ID")
 	};
 
@@ -83,6 +84,27 @@ MM.Format.FreeMind._parseAttributes = function(node, parent) {
 		json.shape = "box";
 	} else {
 		json.shape = parent.shape;
+	}
+
+	if (node.getAttribute("FOLDED") == "true") { json.collapsed = 1; }
+
+	var children = node.children;
+	for (var i=0;i<children.length;i++) {
+		var child = children[i];
+		switch (child.nodeName.toLowerCase()) {
+			case "richcontent":
+				var body = child.querySelector("body > *");
+				if (body) {
+					var serializer = new XMLSerializer();
+					json.text = serializer.serializeToString(body).trim();
+				}
+			break;
+
+			case "font":
+				if (child.getAttribute("ITALIC") == "true") { json.text = "<i>" + json.text + "</i>"; }
+				if (child.getAttribute("BOLD") == "true") { json.text = "<b>" + json.text + "</b>"; }
+			break;
+		}
 	}
 
 	return json;

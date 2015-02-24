@@ -10,6 +10,7 @@ MM.UI.Backend.File.init = function(select) {
 	this._format.appendChild(MM.Format.FreeMind.buildOption());
 	this._format.appendChild(MM.Format.MMA.buildOption());
 	this._format.appendChild(MM.Format.Mup.buildOption());
+	this._format.appendChild(MM.Format.Plaintext.buildOption());
 	this._format.value = localStorage.getItem(this._prefix + "format") || MM.Format.JSON.id;
 }
 
@@ -46,8 +47,8 @@ MM.UI.Backend.File.load = function() {
 
 MM.UI.Backend.File._loadDone = function(data) {
 	try {
-		var format = MM.Format.getByName(this._backend.name);
-		var json = format.from(data);
+		var format = MM.Format.getByName(data.name) || MM.Format.JSON;
+		var json = format.from(data.data);
 	} catch (e) { 
 		this._error(e);
 	}

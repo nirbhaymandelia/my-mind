@@ -1,6 +1,7 @@
 MM.Command = Object.create(MM.Repo, {
 	keys: {value: []},
 	editMode: {value: false},
+	prevent: {value: true}, /* prevent default keyboard action? */
 	label: {value: ""}
 });
 
@@ -49,6 +50,8 @@ MM.Command.InsertSibling.execute = function() {
 	MM.App.action(action);
 
 	MM.Command.Edit.execute();
+
+	MM.publish("command-sibling");
 }
 
 MM.Command.InsertChild = Object.create(MM.Command, {
@@ -64,6 +67,8 @@ MM.Command.InsertChild.execute = function() {
 	MM.App.action(action);	
 
 	MM.Command.Edit.execute();
+
+	MM.publish("command-child");
 }
 
 MM.Command.Delete = Object.create(MM.Command, {
@@ -188,10 +193,10 @@ MM.Command.UI.execute = function() {
 MM.Command.Pan = Object.create(MM.Command, {
 	label: {value: "Pan the map"},
 	keys: {value: [
-		{keyCode: "W".charCodeAt(0), ctrlKey:false, altKey:false},
-		{keyCode: "A".charCodeAt(0), ctrlKey:false, altKey:false},
-		{keyCode: "S".charCodeAt(0), ctrlKey:false, altKey:false},
-		{keyCode: "D".charCodeAt(0), ctrlKey:false, altKey:false}
+		{keyCode: "W".charCodeAt(0), ctrlKey:false, altKey:false, metaKey:false},
+		{keyCode: "A".charCodeAt(0), ctrlKey:false, altKey:false, metaKey:false},
+		{keyCode: "S".charCodeAt(0), ctrlKey:false, altKey:false, metaKey:false},
+		{keyCode: "D".charCodeAt(0), ctrlKey:false, altKey:false, metaKey:false}
 	]},
 	chars: {value: []}
 });
@@ -223,7 +228,7 @@ MM.Command.Pan._step = function() {
 		offset[1] += dirs[ch][1];
 	});
 
-	MM.App.map.moveBy(10*offset[0], 10*offset[1]);
+	MM.App.map.moveBy(15*offset[0], 15*offset[1]);
 }
 
 MM.Command.Pan.handleEvent = function(e) {
@@ -240,7 +245,11 @@ MM.Command.Pan.handleEvent = function(e) {
 
 MM.Command.Copy = Object.create(MM.Command, {
 	label: {value: "Copy"},
-	keys: {value: [{keyCode: "C".charCodeAt(0), ctrlKey:true}]}
+	prevent: {value: false},
+	keys: {value: [
+		{keyCode: "C".charCodeAt(0), ctrlKey:true},
+		{keyCode: "C".charCodeAt(0), metaKey:true}
+	]}
 });
 MM.Command.Copy.execute = function() {
 	MM.Clipboard.copy(MM.App.current);
@@ -248,7 +257,11 @@ MM.Command.Copy.execute = function() {
 
 MM.Command.Cut = Object.create(MM.Command, {
 	label: {value: "Cut"},
-	keys: {value: [{keyCode: "X".charCodeAt(0), ctrlKey:true}]}
+	prevent: {value: false},
+	keys: {value: [
+		{keyCode: "X".charCodeAt(0), ctrlKey:true},
+		{keyCode: "X".charCodeAt(0), metaKey:true}
+	]}
 });
 MM.Command.Cut.execute = function() {
 	MM.Clipboard.cut(MM.App.current);
@@ -256,8 +269,22 @@ MM.Command.Cut.execute = function() {
 
 MM.Command.Paste = Object.create(MM.Command, {
 	label: {value: "Paste"},
-	keys: {value: [{keyCode: "V".charCodeAt(0), ctrlKey:true}]}
+	prevent: {value: false},
+	keys: {value: [
+		{keyCode: "V".charCodeAt(0), ctrlKey:true},
+		{keyCode: "V".charCodeAt(0), metaKey:true}
+	]}
 });
 MM.Command.Paste.execute = function() {
 	MM.Clipboard.paste(MM.App.current);
+}
+
+MM.Command.Fold = Object.create(MM.Command, {
+	label: {value: "Fold/Unfold"},
+	keys: {value: [{charCode: "f".charCodeAt(0), ctrlKey:false}]}
+});
+MM.Command.Fold.execute = function() {
+	var item = MM.App.current;
+	if (item.isCollapsed()) { item.expand(); } else { item.collapse(); }
+	MM.App.map.ensureItemVisibility(item);
 }
